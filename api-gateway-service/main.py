@@ -1,230 +1,175 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import os
-from typing import Optional
-from shared.auth import AuthUtils
+import uvicorn
 
-app = FastAPI(title="API Gateway", description="Unified API Gateway for Autosalon microservices")
+app = FastAPI(
+    title="API Gateway", 
+    description="Unified API Gateway for Autosalon microservices",
+    version="2.0.0"
+)
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify allowed origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Service URLs from environment
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8001")
-PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8002")
-FINANCING_SERVICE_URL = os.getenv("FINANCING_SERVICE_URL", "http://localhost:8003")
-INSURANCE_SERVICE_URL = os.getenv("INSURANCE_SERVICE_URL", "http://localhost:8004")
-
-# Public endpoints that don't require authentication
-PUBLIC_ENDPOINTS = [
-    "", # Root path for API Gateway
-    "auth/",
-    "auth/register",
-    "auth/token",
-    "auth/refresh",
-    "auth/health",
-    "auth/stats",
-    "payment/",
-    "payment/health",
-    "payment/stats",
-    "financing/",
-    "financing/health",
-    "financing/stats",
-    "insurance/",
-    "insurance/health",
-    "insurance/stats",
-    "health"
-]
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8000")
+PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://payment-service:8000")
+FINANCING_SERVICE_URL = os.getenv("FINANCING_SERVICE_URL", "http://financing-service:8000")
+INSURANCE_SERVICE_URL = os.getenv("INSURANCE_SERVICE_URL", "http://insurance-service:8000")
+CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL", "http://customer-service:8000")
+VEHICLE_SERVICE_URL = os.getenv("VEHICLE_SERVICE_URL", "http://vehicle-catalog-service:8000")
+INVENTORY_SERVICE_URL = os.getenv("INVENTORY_SERVICE_URL", "http://inventory-service:8000")
+SALES_SERVICE_URL = os.getenv("SALES_SERVICE_URL", "http://sales-service:8000")
+PRICING_SERVICE_URL = os.getenv("PRICING_SERVICE_URL", "http://pricing-discount-service:8000")
 
 @app.get("/")
 async def read_root():
-    """Get API Gateway status with statistics from all services"""
-    stats = {
-        "message": "API Gateway is running",
-        "version": "1.0.0",
-        "services": {}
+    """Main endpoint"""
+    return {
+        "message": "Auto Dealership API Gateway",
+        "version": "2.0.0",
+        "status": "running",
+        "endpoints": {
+            "health": "/health",
+            "services": "/services",
+            "auth": "/auth/*",
+            "customers": "/customers/*",
+            "vehicles": "/vehicles/*",
+            "inventory": "/inventory/*",
+            "orders": "/orders/*",
+            "pricing": "/pricing/*",
+            "payment": "/payment/*",
+            "financing": "/financing/*",
+            "insurance": "/insurance/*"
+        }
     }
 
-    # Collect statistics from all services
-    services = [
-        ("auth", AUTH_SERVICE_URL),
-        ("payment", PAYMENT_SERVICE_URL),
-        ("financing", FINANCING_SERVICE_URL),
-        ("insurance", INSURANCE_SERVICE_URL)
-    ]
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "api-gateway"}
 
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        for service_name, service_url in services:
-            try:
-                response = await client.get(f"{service_url}/stats")
-                if response.status_code == 200:
-                    stats["services"][service_name] = response.json()
-                else:
-                    stats["services"][service_name] = {"error": f"HTTP {response.status_code}"}
-            except Exception as e:
-                stats["services"][service_name] = {"error": str(e)}
-
-    return stats
-
-async def verify_token(token: str) -> Optional[dict]:
-    """Verify JWT token"""
-    return AuthUtils.verify_token(token)
-
-async def authenticate_request(request: Request) -> Optional[dict]:
-    """Extract and verify authentication token from request"""
-    authorization = request.headers.get("Authorization")
-    if not authorization or not authorization.startswith("Bearer "):
-        return None
-
-    token = authorization.split(" ")[1]
-    return await verify_token(token)
-
-async def check_permissions(user_data: dict, required_roles: list = None) -> bool:
-    """Check if user has required permissions"""
-    if not user_data:
-        return False
-
-    if not required_roles:
-        return True
-
-    user_role = user_data.get("role")
-    return user_role in required_roles
-
-@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
-async def gateway_handler(request: Request, path: str):
-    """Main gateway handler that routes requests to appropriate services"""
-
-    # Normalize path - remove leading slash
-    path = path.lstrip("/")
-
-    # Health check
-    if path == "health":
-        return {"status": "healthy", "service": "api-gateway"}
-
-    # Authenticate request if not public endpoint
-    user_data = None
+@app.get("/services")
+async def list_services():
+    """List all available services"""
+    services = {
+        "auth": AUTH_SERVICE_URL,
+        "payment": PAYMENT_SERVICE_URL,
+        "financing": FINANCING_SERVICE_URL,
+        "insurance": INSURANCE_SERVICE_URL,
+        "customers": CUSTOMER_SERVICE_URL,
+        "vehicles": VEHICLE_SERVICE_URL,
+        "inventory": INVENTORY_SERVICE_URL,
+        "sales": SALES_SERVICE_URL,
+        "pricing": PRICING_SERVICE_URL,
+    }
     
-    is_public_endpoint_match = False
-    for endpoint in PUBLIC_ENDPOINTS:
-        if path == endpoint or path.startswith(endpoint + "/"):
-            is_public_endpoint_match = True
-            break
+    # Проверяем доступность сервисов
+    service_status = {}
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        for name, url in services.items():
+            try:
+                response = await client.get(f"{url}/health")
+                service_status[name] = {
+                    "url": url,
+                    "status": "healthy" if response.status_code == 200 else "unhealthy",
+                    "port": url.split(":")[-1] if ":" in url else "8000"
+                }
+            except:
+                service_status[name] = {
+                    "url": url,
+                    "status": "unavailable",
+                    "port": url.split(":")[-1] if ":" in url else "8000"
+                }
+    
+    return {
+        "gateway": "running",
+        "services": service_status
+    }
 
-    if not is_public_endpoint_match:
-        authorization = request.headers.get("Authorization")
-        if not authorization or not authorization.startswith("Bearer "):
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Authentication required"}
-            )
-
-        token = authorization.split(" ")[1]
-        user_data = AuthUtils.verify_token(token)
-        if not user_data:
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Invalid token"}
-            )
-    else:
-        # If it's a public endpoint, we still need to initialize user_data for permission checks in downstream services
-        # For health checks, user_data is not strictly needed, but for other public endpoints that might require
-        # some user context (e.g., getting public user profiles), we'd get it here if a token is present.
-        # For now, if it's public and no token, user_data remains None.
-        authorization = request.headers.get("Authorization")
-        if authorization and authorization.startswith("Bearer "):
-            token = authorization.split(" ")[1]
-            user_data = AuthUtils.verify_token(token)
-
-    # Route to appropriate service
-    service_url = None
-    forward_path = ""
-
-    if path.startswith("auth/"):
-        service_url = AUTH_SERVICE_URL
-        forward_path = path[len("auth/"):]
-    elif path.startswith("payment/"):
-        service_url = PAYMENT_SERVICE_URL
-        forward_path = path[len("payment/"):]
-        # Check permissions for payment operations, skip for health checks and root path
-        if forward_path not in ["health", ""] and not await check_permissions(user_data, ["client", "manager", "admin"]):
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "Insufficient permissions"}
-            )
-    elif path.startswith("financing/"):
-        service_url = FINANCING_SERVICE_URL
-        forward_path = path[len("financing/"):]
-        # Skip permissions check for health endpoint and root path
-        if forward_path not in ["health", ""] and not await check_permissions(user_data, ["client", "manager", "admin"]):
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "Insufficient permissions"}
-            )
-    elif path.startswith("insurance/"):
-        service_url = INSURANCE_SERVICE_URL
-        forward_path = path[len("insurance/"):]
-        # Skip permissions check for health endpoint and root path
-        if forward_path not in ["health", ""] and not await check_permissions(user_data, ["client", "manager", "admin"]):
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "Insufficient permissions"}
-            )
-    else:
+# Simple proxy endpoints
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+async def proxy_handler(request: Request, path: str):
+    """Simple proxy handler for testing"""
+    
+    # Don't proxy health and services
+    if path in ["health", "services", ""]:
         return JSONResponse(
             status_code=404,
-            content={"detail": "Service not found"}
+            content={"detail": f"Endpoint /{path} should be handled by gateway itself"}
         )
-
-    # Forward request to service
+    
+    # Map to services
+    service_map = {
+        "auth": AUTH_SERVICE_URL,
+        "payment": PAYMENT_SERVICE_URL,
+        "financing": FINANCING_SERVICE_URL,
+        "insurance": INSURANCE_SERVICE_URL,
+        "customers": CUSTOMER_SERVICE_URL,
+        "vehicles": VEHICLE_SERVICE_URL,
+        "inventory": INVENTORY_SERVICE_URL,
+        "orders": SALES_SERVICE_URL,
+        "sales": SALES_SERVICE_URL,
+        "pricing": PRICING_SERVICE_URL,
+    }
+    
+    # Find service
+    target_service = None
+    target_path = path
+    
+    for prefix, url in service_map.items():
+        if path.startswith(prefix + "/") or path == prefix:
+            target_service = url
+            if path != prefix:
+                target_path = path[len(prefix)+1:]  # Remove prefix
+            else:
+                target_path = ""
+            break
+    
+    if not target_service:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": f"No service found for path: {path}"}
+        )
+    
+    # Forward request
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            url = f"{service_url}/{forward_path}"
-
-            # Prepare request data
+            target_url = f"{target_service}/{target_path}" if target_path else target_service
+            
+            # Prepare headers
             headers = dict(request.headers)
-            # Remove host header to avoid conflicts
             headers.pop("host", None)
-
-            # Forward the request
+            
+            # Forward
             response = await client.request(
                 method=request.method,
-                url=url,
+                url=target_url,
                 headers=headers,
                 content=await request.body(),
                 params=request.query_params
             )
-
-            # Return response from service
+            
             return JSONResponse(
                 status_code=response.status_code,
-                content=response.json() if response.headers.get("content-type", "").startswith("application/json") else response.text
+                content=response.json() if response.headers.get("content-type", "").startswith("application/json") else response.text,
+                headers=dict(response.headers)
             )
-
-    except httpx.TimeoutException:
-        return JSONResponse(
-            status_code=504,
-            content={"detail": "Service timeout"}
-        )
-    except httpx.RequestError as e:
-        return JSONResponse(
-            status_code=502,
-            content={"detail": f"Service unavailable: {str(e)}"}
-        )
+            
     except Exception as e:
         return JSONResponse(
-            status_code=500,
-            content={"detail": f"Internal error: {str(e)}"}
+            status_code=502,
+            content={"detail": f"Service error: {str(e)}"}
         )
 
-@app.get("/health")
-def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "api-gateway"}
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
