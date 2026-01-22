@@ -74,6 +74,20 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
  
+<<<<<<< HEAD
+=======
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"   # SMTP port for sending emails
+      - "8025:8025"   # Web UI for viewing emails
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
+>>>>>>> feature-data-loading
   customer-db: #K
     image: postgres:15
     environment:
@@ -155,6 +169,90 @@ services:
       timeout: 5s
       retries: 5
 
+<<<<<<< HEAD
+=======
+  # Databases for new services
+  booking-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54330:5432"
+    volumes:
+      - booking_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d booking_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  notification-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54331:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d notification_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  reporting-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: reporting_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54332:5432"
+    volumes:
+      - reporting_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d reporting_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  logging-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: logging_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54333:5432"
+    volumes:
+      - logging_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d logging_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  admin-config-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: admin_config_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54334:5432"
+    volumes:
+      - admin_config_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d admin_config_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+>>>>>>> feature-data-loading
   # Microservices - каждый со своей базой данных
   auth-service:
     build: ./auth-service
@@ -177,11 +275,24 @@ services:
       - PAYMENT_SERVICE_URL=http://payment-service:8000
       - FINANCING_SERVICE_URL=http://financing-service:8000
       - INSURANCE_SERVICE_URL=http://insurance-service:8000
+<<<<<<< HEAD
       - CUSTOMER_SERVICE_URL=http://customer-service:8000 #K
       - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000 #K
       - INVENTORY_SERVICE_URL=http://inventory-service:8000 #K
       - SALES_SERVICE_URL=http://sales-service:8000 #K
       - PRICING_SERVICE_URL=http://pricing-discount-service:8000 #K
+=======
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - SALES_SERVICE_URL=http://sales-service:8000
+      - PRICING_SERVICE_URL=http://pricing-discount-service:8000
+      - ADMIN_CONFIG_URL=http://admin-config-service:8000
+      - SERVICE_BOOKING_URL=http://service-booking-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      - REPORTING_SERVICE_URL=http://reporting-analytics-service:8000
+      - LOGGING_SERVICE_URL=http://logging-monitoring-service:8000
+>>>>>>> feature-data-loading
     depends_on:
       - auth-service
       - payment-service
@@ -192,11 +303,19 @@ services:
       - inventory-service
       - sales-service
       - pricing-discount-service
+<<<<<<< HEAD
       - customer-service #K
       - vehicle-catalog-service #K
       - inventory-service #K
       - sales-service #K
       - pricing-discount-service #K
+=======
+      - admin-config-service
+      - service-booking-service
+      - notification-service
+      - reporting-analytics-service
+      - logging-monitoring-service
+>>>>>>> feature-data-loading
 
   payment-service:
     build: ./payment-service
@@ -309,7 +428,111 @@ services:
       vehicle-catalog-service:
         condition: service_started
   
+<<<<<<< HEAD
   
+=======
+  admin-config-service:
+    build: ./admin-config-service
+    ports:
+      - "8014:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@admin-config-db:5432/admin_config_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      admin-config-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started  
+
+  service-booking-service:
+    build: ./service-booking-service
+    ports:
+      - "8010:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@booking-db:5432/booking_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - ADMIN_CONFIG_URL=http://admin-config-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+    depends_on:
+      booking-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      admin-config-service:
+        condition: service_started
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8011:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@notification-db:5432/notification_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+      - EMAIL_FROM=noreply@autosalon.com
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      mailhog:
+        condition: service_started
+
+  reporting-analytics-service:
+    build: ./reporting-analytics-service
+    ports:
+      - "8012:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@reporting-db:5432/reporting_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - SALES_SERVICE_URL=http://sales-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - REPORTS_STORAGE_PATH=/app/reports
+      - PYTHONPATH=/app
+    depends_on:
+      reporting-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./reporting-analytics-service:/app
+      - reports_data:/app/reports
+  
+  logging-monitoring-service:
+    build: ./logging-monitoring-service
+    ports:
+      - "8013:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@logging-db:5432/logging_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - LOG_LEVEL=INFO
+    depends_on:
+      logging-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+>>>>>>> feature-data-loading
 
   # Monitoring stack
   prometheus:
@@ -349,6 +572,7 @@ volumes:
   payment_db_data:
   financing_db_data:
   insurance_db_data:
+<<<<<<< HEAD
   customer_db_data: #K
   vehicle_db_data: #K
   inventory_db_data: #K
@@ -356,3 +580,18 @@ volumes:
   pricing_db_data: #K
   prometheus_data:
   grafana_data:
+=======
+  customer_db_data:
+  vehicle_db_data:
+  inventory_db_data:
+  sales_db_data:
+  pricing_db_data:
+  booking_db_data:
+  notification_db_data:
+  reporting_db_data:
+  logging_db_data:
+  admin_config_db_data:
+  reports_data:
+  prometheus_data:
+  grafana_data:
+>>>>>>> feature-data-loading

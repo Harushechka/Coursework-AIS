@@ -30,6 +30,11 @@ VEHICLE_SERVICE_URL = os.getenv("VEHICLE_SERVICE_URL", "http://vehicle-catalog-s
 INVENTORY_SERVICE_URL = os.getenv("INVENTORY_SERVICE_URL", "http://inventory-service:8000")
 SALES_SERVICE_URL = os.getenv("SALES_SERVICE_URL", "http://sales-service:8000")
 PRICING_SERVICE_URL = os.getenv("PRICING_SERVICE_URL", "http://pricing-discount-service:8000")
+ADMIN_CONFIG_URL = os.getenv("ADMIN_CONFIG_URL", "http://admin-config-service:8000")
+SERVICE_BOOKING_URL = os.getenv("SERVICE_BOOKING_URL", "http://service-booking-service:8000")
+NOTIFICATION_SERVICE_URL = os.getenv("NOTIFICATION_SERVICE_URL", "http://notification-service:8000")
+REPORTING_SERVICE_URL = os.getenv("REPORTING_SERVICE_URL", "http://reporting-analytics-service:8000")
+LOGGING_SERVICE_URL = os.getenv("LOGGING_SERVICE_URL", "http://logging-monitoring-service:8000")
 
 @app.get("/")
 async def read_root():
@@ -71,6 +76,16 @@ async def list_services():
         "inventory": INVENTORY_SERVICE_URL,
         "sales": SALES_SERVICE_URL,
         "pricing": PRICING_SERVICE_URL,
+<<<<<<< HEAD
+=======
+        "admin": ADMIN_CONFIG_URL,
+        "booking": SERVICE_BOOKING_URL,
+        "notifications": NOTIFICATION_SERVICE_URL,
+        "reports": REPORTING_SERVICE_URL,
+        "analytics": REPORTING_SERVICE_URL,
+        "logs": LOGGING_SERVICE_URL,
+        "monitoring": LOGGING_SERVICE_URL,
+>>>>>>> feature-data-loading
     }
     
     # Проверяем доступность сервисов
@@ -120,6 +135,16 @@ async def proxy_handler(request: Request, path: str):
         "orders": SALES_SERVICE_URL,
         "sales": SALES_SERVICE_URL,
         "pricing": PRICING_SERVICE_URL,
+<<<<<<< HEAD
+=======
+        "admin": ADMIN_CONFIG_URL,
+        "booking": SERVICE_BOOKING_URL,
+        "notifications": NOTIFICATION_SERVICE_URL,
+        "reports": REPORTING_SERVICE_URL,
+        "analytics": REPORTING_SERVICE_URL,
+        "logs": LOGGING_SERVICE_URL,
+        "monitoring": LOGGING_SERVICE_URL,
+>>>>>>> feature-data-loading
     }
     
     # Find service
