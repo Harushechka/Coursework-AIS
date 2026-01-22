@@ -1,0 +1,83 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'payment-service'
+    static_configs:
+      - targets: ['payment-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'financing-service'
+    static_configs:
+      - targets: ['financing-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'insurance-service'
+    static_configs:
+      - targets: ['insurance-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'customer-service'
+    static_configs:
+      - targets: ['customer-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'vehicle-catalog-service'
+    static_configs:
+      - targets: ['vehicle-catalog-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'inventory-service'
+    static_configs:
+      - targets: ['inventory-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'pricing-discount-service'
+    static_configs:
+      - targets: ['pricing-discount-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'sales-service'
+    static_configs:
+      - targets: ['sales-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'service-booking-service'
+    static_configs:
+      - targets: ['service-booking-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'reporting-analytics-service'
+    static_configs:
+      - targets: ['reporting-analytics-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'logging-monitoring-service'
+    static_configs:
+      - targets: ['logging-monitoring-service:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'admin-config-service'
+    static_configs:
+      - targets: ['admin-config-service:8000']
+    metrics_path: '/metrics'
