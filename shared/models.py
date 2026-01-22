@@ -52,8 +52,6 @@ class FinancingEvent(EventBase):
     pass
 
 class InsuranceEvent(EventBase):
-<<<<<<< HEAD
-=======
     pass
 
 class AppointmentStatus(str, Enum):
@@ -127,5 +125,4 @@ class LogEvent(EventBase):
     pass
 
 class ConfigEvent(EventBase):
->>>>>>> feature-data-loading
     pass
