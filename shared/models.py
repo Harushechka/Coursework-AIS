@@ -52,8 +52,6 @@ class FinancingEvent(EventBase):
     pass
 
 class InsuranceEvent(EventBase):
-<<<<<<< HEAD
-=======
     pass
 
 class AppointmentStatus(str, Enum):
@@ -98,23 +96,284 @@ class ConfigType(str, Enum):
 # Базовые модели для новых сущностей
 class CustomerBase(BaseModel):
     user_id: Optional[int] = None
-    first_name: str
-    last_name: str
-    phone: str
     email: str
+    full_name: str
+    phone: Optional[str] = None
     address: Optional[str] = None
+    driver_license: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class CustomerCreate(CustomerBase):
+    pass
+
+class CustomerResponse(CustomerBase):
+    id: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
 
 class VehicleBase(BaseModel):
     make: str
     model: str
     year: int
     vin: str
-    license_plate: Optional[str] = None
-    color: Optional[str] = None
     mileage: Optional[int] = None
+    price: float
+    status: str = "available"
+    description: Optional[str] = None
 
-# Модели событий для RabbitMQ
-class BookingEvent(EventBase):
+class VehicleCreate(VehicleBase):
+    pass
+
+class VehicleResponse(VehicleBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class InventoryBase(BaseModel):
+    vehicle_id: int
+    location: str
+    condition: str = "excellent"
+    notes: Optional[str] = None
+
+class InventoryCreate(InventoryBase):
+    pass
+
+class InventoryResponse(InventoryBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class OrderBase(BaseModel):
+    customer_id: int
+    vehicle_id: int
+    total_price: float
+    status: str = "pending"
+    notes: Optional[str] = None
+
+class OrderCreate(OrderBase):
+    pass
+
+class OrderResponse(OrderBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class PaymentBase(BaseModel):
+    order_id: int
+    amount: float
+    payment_method: str
+    transaction_id: Optional[str] = None
+    status: str = "pending"
+
+class PaymentCreate(PaymentBase):
+    pass
+
+class PaymentResponse(PaymentBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class FinancingBase(BaseModel):
+    customer_id: int
+    vehicle_id: int
+    loan_amount: float
+    interest_rate: float
+    term_months: int
+    monthly_payment: float
+    status: str = "pending"
+
+class FinancingCreate(FinancingBase):
+    pass
+
+class FinancingResponse(FinancingBase):
+    id: int
+    created_at: datetime
+    approved_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class InsuranceBase(BaseModel):
+    customer_id: int
+    vehicle_id: int
+    policy_type: str
+    coverage_amount: float
+    premium: float
+    start_date: datetime
+    end_date: datetime
+    status: str = "active"
+
+class InsuranceCreate(InsuranceBase):
+    pass
+
+class InsuranceResponse(InsuranceBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class AppointmentBase(BaseModel):
+    customer_id: int
+    technician_id: Optional[int] = None
+    service_type: str
+    scheduled_date: datetime
+    duration_minutes: int
+    status: AppointmentStatus = AppointmentStatus.PENDING
+    notes: Optional[str] = None
+
+class AppointmentCreate(AppointmentBase):
+    pass
+
+class AppointmentResponse(AppointmentBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class NotificationBase(BaseModel):
+    recipient_email: str
+    recipient_phone: Optional[str] = None
+    notification_type: NotificationType
+    subject: str
+    message: str
+    status: NotificationStatus = NotificationStatus.PENDING
+
+class NotificationCreate(NotificationBase):
+    pass
+
+class NotificationResponse(NotificationBase):
+    id: int
+    sent_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class LogBase(BaseModel):
+    service_name: str
+    level: LogLevel
+    message: str
+    user_id: Optional[int] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+
+class LogCreate(LogBase):
+    pass
+
+class LogResponse(LogBase):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+class ReportBase(BaseModel):
+    report_type: ReportType
+    parameters: dict
+    generated_by: int
+    status: str = "pending"
+
+class ReportCreate(ReportBase):
+    pass
+
+class ReportResponse(ReportBase):
+    id: int
+    file_path: Optional[str] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class ConfigBase(BaseModel):
+    config_type: ConfigType
+    key: str
+    value: str
+    description: Optional[str] = None
+    is_active: bool = True
+
+class ConfigCreate(ConfigBase):
+    pass
+
+class ConfigResponse(ConfigBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class ServiceBase(BaseModel):
+    name: str
+    description: str
+    duration_minutes: int
+    price: float
+    is_active: bool = True
+
+class ServiceCreate(ServiceBase):
+    pass
+
+class ServiceResponse(ServiceBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TechnicianBase(BaseModel):
+    user_id: int
+    specialization: str
+    experience_years: int
+    rating: Optional[float] = None
+    is_available: bool = True
+
+class TechnicianCreate(TechnicianBase):
+    pass
+
+class TechnicianResponse(TechnicianBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ServiceSlotBase(BaseModel):
+    technician_id: int
+    service_date: datetime
+    start_time: str
+    end_time: str
+    is_available: bool = True
+
+class ServiceSlotCreate(ServiceSlotBase):
+    pass
+
+class ServiceSlotResponse(ServiceSlotBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Event models for message broker
+class AppointmentEvent(EventBase):
     pass
 
 class NotificationEvent(EventBase):
@@ -127,5 +386,4 @@ class LogEvent(EventBase):
     pass
 
 class ConfigEvent(EventBase):
->>>>>>> feature-data-loading
     pass
