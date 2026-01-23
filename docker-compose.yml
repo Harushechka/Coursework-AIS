@@ -1,0 +1,480 @@
+services:
+  # Databases - каждый сервис имеет свою базу данных
+  auth-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "54321:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+
+  payment-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54322:5432"
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+
+  financing-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: financing_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54323:5432"
+    volumes:
+      - financing_db_data:/var/lib/postgresql/data
+
+  insurance-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: insurance_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54324:5432"
+    volumes:
+      - insurance_db_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"   # SMTP port for sending emails
+      - "8025:8025"   # Web UI for viewing emails
+
+  customer-db: #K
+    image: postgres:15
+    environment:
+      POSTGRES_DB: customer_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "54325:5432"
+    volumes:
+      - customer_db_data:/var/lib/postgresql/data
+
+  vehicle-db: #K
+    image: postgres:15
+    environment:
+      POSTGRES_DB: vehicle_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54326:5432"
+    volumes:
+      - vehicle_db_data:/var/lib/postgresql/data
+
+  inventory-db: #K
+    image: postgres:15
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54327:5432"
+    volumes:
+      - inventory_db_data:/var/lib/postgresql/data
+
+  sales-db: #K
+    image: postgres:15
+    environment:
+      POSTGRES_DB: sales_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54328:5432"
+    volumes:
+      - sales_db_data:/var/lib/postgresql/data
+
+  pricing-db: #K
+    image: postgres:15
+    environment:
+      POSTGRES_DB: pricing_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54329:5432"
+    volumes:
+      - pricing_db_data:/var/lib/postgresql/data
+
+  # Databases for new services
+  booking-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54330:5432"
+    volumes:
+      - booking_db_data:/var/lib/postgresql/data
+
+  notification-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54331:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+
+  reporting-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: reporting_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54332:5432"
+    volumes:
+      - reporting_db_data:/var/lib/postgresql/data
+
+  logging-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: logging_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54333:5432"
+    volumes:
+      - logging_db_data:/var/lib/postgresql/data
+
+  admin-config-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: admin_config_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "54334:5432"
+    volumes:
+      - admin_config_db_data:/var/lib/postgresql/data
+
+  # Microservices - каждый со своей базой данных
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@auth-db:5432/auth_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      - auth-db
+      - rabbitmq
+
+  api-gateway:
+    build: ./api-gateway-service
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - FINANCING_SERVICE_URL=http://financing-service:8000
+      - INSURANCE_SERVICE_URL=http://insurance-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - SALES_SERVICE_URL=http://sales-service:8000
+      - PRICING_SERVICE_URL=http://pricing-discount-service:8000
+      - ADMIN_CONFIG_URL=http://admin-config-service:8000
+      - SERVICE_BOOKING_URL=http://service-booking-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      - REPORTING_SERVICE_URL=http://reporting-analytics-service:8000
+      - LOGGING_SERVICE_URL=http://logging-monitoring-service:8000
+    depends_on:
+      - auth-service
+      - payment-service
+      - financing-service
+      - insurance-service
+      - customer-service
+      - vehicle-catalog-service
+      - inventory-service
+      - sales-service
+      - pricing-discount-service
+      - admin-config-service
+      - service-booking-service
+      - notification-service
+      - reporting-analytics-service
+      - logging-monitoring-service
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8002:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@payment-db:5432/payment_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - payment-db
+      - rabbitmq
+
+  financing-service:
+    build: ./financing-service
+    ports:
+      - "8003:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@financing-db:5432/financing_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - financing-db
+      - rabbitmq
+
+  insurance-service:
+    build: ./insurance-service
+    ports:
+      - "8004:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@insurance-db:5432/insurance_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - insurance-db
+      - rabbitmq
+
+  customer-service: #K
+    build: ./customer-service
+    ports:
+      - "8005:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@customer-db:5432/customer_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      customer-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  vehicle-catalog-service: #K
+    build: ./vehicle-catalog-service
+    ports:
+      - "8006:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@vehicle-db:5432/vehicle_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      vehicle-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  inventory-service: #K
+    build: ./inventory-service
+    ports:
+      - "8007:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@inventory-db:5432/inventory_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      inventory-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  pricing-discount-service: #K
+    build: ./pricing-discount-service
+    ports:
+      - "8008:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@pricing-db:5432/pricing_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      pricing-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  sales-service: #K
+    build: ./sales-service
+    ports:
+      - "8009:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@sales-db:5432/sales_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PRICING_SERVICE_URL=http://pricing-discount-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+    depends_on:
+      sales-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      pricing-discount-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      customer-service:
+        condition: service_started
+      vehicle-catalog-service:
+        condition: service_started
+
+  admin-config-service:
+    build: ./admin-config-service
+    ports:
+      - "8014:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@admin-config-db:5432/admin_config_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      admin-config-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+
+  service-booking-service:
+    build: ./service-booking-service
+    ports:
+      - "8010:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@booking-db:5432/booking_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - ADMIN_CONFIG_URL=http://admin-config-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+    depends_on:
+      booking-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      admin-config-service:
+        condition: service_started
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8011:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@notification-db:5432/notification_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+      - EMAIL_FROM=noreply@autosalon.com
+    depends_on:
+      notification-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      mailhog:
+        condition: service_started
+
+  reporting-analytics-service:
+    build: ./reporting-analytics-service
+    ports:
+      - "8012:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@reporting-db:5432/reporting_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - SALES_SERVICE_URL=http://sales-service:8000
+      - CUSTOMER_SERVICE_URL=http://customer-service:8000
+      - VEHICLE_SERVICE_URL=http://vehicle-catalog-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - INVENTORY_SERVICE_URL=http://inventory-service:8000
+      - REPORTS_STORAGE_PATH=/app/reports
+      - PYTHONPATH=/app
+    depends_on:
+      reporting-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    volumes:
+      - ./reporting-analytics-service:/app
+      - reports_data:/app/reports
+
+  logging-monitoring-service:
+    build: ./logging-monitoring-service
+    ports:
+      - "8013:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@logging-db:5432/logging_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - JWT_SECRET=your-secret-key
+      - LOG_LEVEL=INFO
+    depends_on:
+      logging-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+
+  # Monitoring stack
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - api-gateway
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+
+volumes:
+  auth_db_data:
+  payment_db_data:
+  financing_db_data:
+  insurance_db_data:
+  customer_db_data:
+  vehicle_db_data:
+  inventory_db_data:
+  sales_db_data:
+  pricing_db_data:
+  booking_db_data:
+  notification_db_data:
+  reporting_db_data:
+  logging_db_data:
+  admin_config_db_data:
+  reports_data:
+  prometheus_data:
+  grafana_data:

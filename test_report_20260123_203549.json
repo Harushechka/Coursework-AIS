@@ -1,0 +1,127 @@
+{
+  "test_summary": {
+    "total_tests": 19,
+    "successful_tests": 18,
+    "failed_tests": 1,
+    "success_rate": 94.73684210526315,
+    "duration_seconds": 15.23992,
+    "start_time": "2026-01-23T20:35:34.401381",
+    "end_time": "2026-01-23T20:35:49.641301"
+  },
+  "test_results": [
+    {
+      "timestamp": "20:35:49",
+      "message": "API Gateway - основной эндпоинт",
+      "success": true,
+      "details": "Version: 2.0.0"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис auth",
+      "success": true,
+      "details": "URL: http://auth-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис payment",
+      "success": true,
+      "details": "URL: http://payment-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис financing",
+      "success": true,
+      "details": "URL: http://financing-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис insurance",
+      "success": true,
+      "details": "URL: http://insurance-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис customers",
+      "success": true,
+      "details": "URL: http://customer-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис vehicles",
+      "success": true,
+      "details": "URL: http://vehicle-catalog-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис inventory",
+      "success": true,
+      "details": "URL: http://inventory-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис sales",
+      "success": true,
+      "details": "URL: http://sales-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис pricing",
+      "success": true,
+      "details": "URL: http://pricing-discount-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис admin",
+      "success": true,
+      "details": "URL: http://admin-config-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис booking",
+      "success": true,
+      "details": "URL: http://service-booking-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис notifications",
+      "success": true,
+      "details": "URL: http://notification-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис reports",
+      "success": true,
+      "details": "URL: http://reporting-analytics-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис analytics",
+      "success": true,
+      "details": "URL: http://reporting-analytics-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис logs",
+      "success": true,
+      "details": "URL: http://logging-monitoring-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Сервис monitoring",
+      "success": true,
+      "details": "URL: http://logging-monitoring-service:8000"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Общая проверка сервисов",
+      "success": true,
+      "details": "Здоровых: 16/16"
+    },
+    {
+      "timestamp": "20:35:49",
+      "message": "Регистрация пользователя",
+      "success": false,
+      "details": "Статус: 400, Ответ: {\"detail\":\"Email already registered\"}"
+    }
+  ]
+}
